@@ -1,0 +1,55 @@
+{
+  "name": "Sample corpus QA",
+  "items": [
+    {
+      "question": "What was Acme Robotics' total revenue in 2025 and how much did it grow?",
+      "answer": "Total revenue was $48.2 million, up 23% over 2024.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 1}]
+    },
+    {
+      "question": "Which region drove growth and why?",
+      "answer": "APAC drove growth, with revenue up 41% after the R7 warehouse robot launched in Singapore and Japan.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 1}]
+    },
+    {
+      "question": "What was the operating margin in Q3?",
+      "answer": "The Q3 operating margin was 21%.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 2, "contains": "Q3"}]
+    },
+    {
+      "question": "How many customers did the company have in Q2?",
+      "answer": "1,390 customers in Q2.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 2, "contains": "1,390"}]
+    },
+    {
+      "question": "Which figure shows revenue by region?",
+      "answer": "Figure 1 shows revenue by region for FY2025 in millions of US dollars.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 3}]
+    },
+    {
+      "question": "What are the main business risks for 2026?",
+      "answer": "Semiconductor supply constraints, yen currency exposure and competition in autonomous mobile robots.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 3}]
+    },
+    {
+      "question": "What capital expenditure budget did the board approve for 2026?",
+      "answer": "$6.5 million, including $2.2 million for the Singapore data centre.",
+      "relevant": [{"doc": "acme_annual_report_2025.pdf", "page": 4}]
+    },
+    {
+      "question": "How quickly does the R7 stop after pressing the emergency stop?",
+      "answer": "Within 0.4 seconds at full speed.",
+      "relevant": [{"doc": "r7_safety_manual.pdf", "contains": "emergency stop"}]
+    },
+    {
+      "question": "When should the robot battery pack be replaced?",
+      "answer": "After 3,000 cycles or when capacity drops below 70%.",
+      "relevant": [{"doc": "r7_safety_manual.pdf", "contains": "3,000 cycles"}]
+    },
+    {
+      "question": "How much is the home office stipend for remote employees?",
+      "answer": "A one-time $750 home office stipend plus a $40 monthly internet allowance.",
+      "relevant": [{"doc": "remote_work_policy.md"}]
+    }
+  ]
+}

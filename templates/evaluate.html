@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Evaluate{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Evaluation</h1>
+  <p class="muted">Compare retrieval configurations (Hit@k, Recall@k, Precision@k, MRR, nDCG@k, latency) and score answers (F1, ROUGE-L, faithfulness, citation precision / coverage, optional LLM judge).</p>
+</section>
+
+<form id="eval-form" class="card eval-form">
+  <div class="field">
+    <label for="dataset">Dataset</label>
+    <select id="dataset" required></select>
+  </div>
+  <fieldset class="field">
+    <legend>Retrieval configs</legend>
+    <div class="check-row">
+      {% for c in configs %}
+      <label class="check"><input type="checkbox" name="configs" value="{{ c }}" checked> {{ c }}</label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <div class="field">
+    <label for="eval-k">k</label>
+    <select id="eval-k"><option>3</option><option selected>5</option><option>10</option></select>
+  </div>
+  <div class="field">
+    <span class="label">Answers</span>
+    <div class="check-row">
+      <label class="check"><input type="checkbox" id="eval-generate" checked> Generate</label>
+      <label class="check"><input type="checkbox" id="eval-llm" checked> Use LLM</label>
+      <label class="check"><input type="checkbox" id="eval-judge"> LLM judge</label>
+    </div>
+  </div>
+  <div class="field actions">
+    <button class="btn btn-primary" type="submit" id="run-eval">Run evaluation</button>
+    <button class="btn btn-ghost" type="button" id="synth-btn">Generate synthetic set</button>
+  </div>
+  <p id="eval-msg" class="small" role="status"></p>
+</form>
+
+<div id="eval-results" hidden>
+  <section class="card">
+    <div class="card-head"><h2>Retrieval</h2><span class="muted small" id="eval-meta"></span></div>
+    <div class="table-wrap"><table class="data-table metrics" id="retrieval-table"></table></div>
+  </section>
+  <section class="card" id="answer-card">
+    <div class="card-head"><h2>Answer quality</h2><span class="muted small" id="answer-config"></span></div>
+    <div class="metric-grid" id="answer-metrics"></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Per-question breakdown</h2></div>
+    <div id="eval-details" class="details-list"></div>
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-head"><h2>Previous runs</h2></div>
+  <ul id="run-list" class="run-list"><li class="muted">No runs yet.</li></ul>
+</section>
+{% endblock %}

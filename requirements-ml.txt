@@ -1,0 +1,5 @@
+# Optional: local transformer models for best retrieval quality.
+# Enables sentence-transformers bi-encoder embeddings and the ms-marco cross-encoder reranker.
+-r requirements.txt
+sentence-transformers>=3.0
+torch>=2.2

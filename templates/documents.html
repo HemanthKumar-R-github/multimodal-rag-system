@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Documents{% endblock %}
+{% block content %}
+<section class="page-head">
+  <h1>Documents</h1>
+  <p class="muted">PDF (native or scanned), PNG/JPG/TIFF/WebP images, TXT and Markdown. Max 50 MB per request.</p>
+</section>
+
+<form id="upload-form" class="card dropzone" enctype="multipart/form-data">
+  <input type="file" id="file-input" name="files" multiple accept=".pdf,.png,.jpg,.jpeg,.tif,.tiff,.bmp,.webp,.txt,.md" class="sr-only">
+  <label for="file-input" class="dropzone-label">
+    <span class="dropzone-title">Drop files here or click to browse</span>
+    <span class="muted small">Ingestion runs in the background — text, tables, figures and charts are extracted per page.</span>
+  </label>
+  <p id="upload-msg" class="small" role="status"></p>
+</form>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Library</h2>
+    <button class="btn btn-ghost" id="refresh-docs" type="button">Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th scope="col">Document</th><th scope="col">Status</th><th scope="col">Pages</th><th scope="col">Chunks</th><th scope="col">Modalities</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+      </thead>
+      <tbody id="doc-rows"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<dialog id="chunk-dialog" class="dialog" aria-labelledby="chunk-dialog-title">
+  <div class="card-head">
+    <h2 id="chunk-dialog-title">Chunks</h2>
+    <button class="btn btn-ghost" type="button" id="close-dialog">Close</button>
+  </div>
+  <div id="chunk-list" class="chunk-list"></div>
+</dialog>
+{% endblock %}

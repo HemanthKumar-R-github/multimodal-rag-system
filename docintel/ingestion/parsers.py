@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import fitz  # PyMuPDF
+import pdfplumber
 from PIL import Image
 
 from .chunker import chunk_text, clean_text, split_markdown_table, table_to_markdown
@@ -48,9 +49,12 @@ def _rect_overlap(a: fitz.Rect, b: fitz.Rect) -> float:
 
 
 def _nearby_text(blocks: list, rect: fitz.Rect, margin: float = 70) -> str:
-    """Text blocks directly above/below a figure usually hold its caption."""
+    """Text blocks directly above/below a figure or table (but not inside it) usually hold its caption."""
     zone = fitz.Rect(rect.x0 - 20, rect.y0 - margin, rect.x1 + 20, rect.y1 + margin)
-    parts = [b[4].strip() for b in blocks if b[6] == 0 and fitz.Rect(b[:4]).intersects(zone)]
+    parts = [
+        b[4].strip() for b in blocks
+        if b[6] == 0 and fitz.Rect(b[:4]).intersects(zone) and _rect_overlap(fitz.Rect(b[:4]), rect) < 0.5
+    ]
     return " ".join(p.replace("\n", " ") for p in parts)[:800]
 
 
@@ -80,17 +84,20 @@ def _figure_content(page_no: int | None, analysis: dict | None, context: str, oc
 
 
 def _extract_tables(page: fitz.Page, plumber_page=None) -> list[tuple[fitz.Rect, list[list]]]:
-    try:
-        found = page.find_tables()
-        return [(fitz.Rect(t.bbox), t.extract()) for t in found.tables]
-    except Exception:
-        if plumber_page is None:
-            return []
+    """pdfplumber keeps cell text (decimals, thousands separators) intact more reliably;
+    PyMuPDF's detector is the fallback."""
+    if plumber_page is not None:
         try:
-            return [(fitz.Rect(t.bbox), t.extract()) for t in plumber_page.find_tables()]
+            tables = [(fitz.Rect(t.bbox), t.extract()) for t in plumber_page.find_tables()]
+            if tables:
+                return tables
         except Exception as exc:
             log.debug("pdfplumber table extraction failed: %s", exc)
-            return []
+    try:
+        return [(fitz.Rect(t.bbox), t.extract()) for t in page.find_tables().tables]
+    except Exception as exc:
+        log.debug("PyMuPDF table extraction failed: %s", exc)
+        return []
 
 
 def parse_pdf(path: Path, doc_id: int, ctx: ParseContext) -> ParseResult:
@@ -99,12 +106,19 @@ def parse_pdf(path: Path, doc_id: int, ctx: ParseContext) -> ParseResult:
     out_dir.mkdir(parents=True, exist_ok=True)
     seen_xrefs: set[int] = set()
 
+    try:
+        plumber_doc = pdfplumber.open(path)
+    except Exception as exc:
+        log.debug("pdfplumber could not open %s: %s", path, exc)
+        plumber_doc = None
+
     with fitz.open(path) as doc:
         result.pages = doc.page_count
         for page in doc:
             pno = page.number + 1
             blocks = page.get_text("blocks")
-            tables = _extract_tables(page)
+            plumber_page = plumber_doc.pages[page.number] if plumber_doc else None
+            tables = _extract_tables(page, plumber_page)
             table_rects = [r for r, _ in tables]
 
             text_blocks = [
@@ -186,6 +200,8 @@ def parse_pdf(path: Path, doc_id: int, ctx: ParseContext) -> ParseResult:
                             modality, content = _figure_content(pno, analysis, context, "")
                             result.add(pno, modality, content, image=f"{doc_id}/{img_path.name}",
                                        bbox=list(area), method="vlm-vector")
+    if plumber_doc:
+        plumber_doc.close()
     return result
 
 

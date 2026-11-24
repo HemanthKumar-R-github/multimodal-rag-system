@@ -86,29 +86,48 @@ class AnswerGenerator:
         }
 
     @staticmethod
-    def _extractive(question: str, chunks: list[dict], max_units: int = 3) -> str:
+    def _units(chunk: dict) -> list[str]:
+        """Sentences for prose; for tables, each row rendered as 'column: value' pairs."""
+        content = chunk.get("meta", {}).get("table_markdown") or chunk["content"]
+        if chunk["modality"] != "table":
+            return split_sentences(content.replace("\n", " ")) if chunk["modality"] != "chart" else content.splitlines()
+        rows = [ln for ln in content.splitlines() if ln.startswith("|") and not set(ln) <= set("|-: ")]
+        if len(rows) < 2:
+            return content.splitlines()
+        cells = lambda ln: [c.strip() for c in ln.strip("|").split("|")]  # noqa: E731
+        header = cells(rows[0])
+        where = f"Table (p.{chunk['page']})" if chunk.get("page") else "Table"
+        return [f"{where}: " + ", ".join(f"{h}: {v}" for h, v in zip(header, cells(r)) if v) for r in rows[1:]]
+
+    @classmethod
+    def _extractive(cls, question: str, chunks: list[dict], max_units: int = 4) -> str:
         q = set(tokenize(question))
         if not q:
             return NOT_FOUND
         scored: list[tuple[float, int, str]] = []
         for n, c in enumerate(chunks, 1):
-            units = c["content"].splitlines() if c["modality"] in {"table", "chart"} else split_sentences(c["content"])
-            for pos, unit in enumerate(units):
+            for pos, unit in enumerate(cls._units(c)):
                 toks = set(tokenize(unit))
                 if not toks:
                     continue
                 overlap = len(q & toks) / len(q)
                 # prefer higher-ranked sources and earlier sentences slightly
-                scored.append((overlap - 0.03 * (n - 1) - 0.002 * pos, n, unit.strip()))
+                scored.append((overlap - 0.02 * (n - 1) - 0.002 * pos, n, unit.strip()))
         scored.sort(reverse=True)
-        picked, seen = [], set()
-        for score, n, unit in scored:
-            if score <= 0.15 or unit in seen:
-                continue
-            seen.add(unit)
-            picked.append(f"{unit.rstrip('.')}. [{n}]" if not unit.startswith("|") else f"{unit} [{n}]")
+        candidates = [(s, n, u) for s, n, u in scored if s > 0.15]
+        # Pass 1: best unit per source (covers multi-part questions); pass 2: fill remaining slots.
+        picked: list[tuple[int, str]] = []
+        used_sources: set[int] = set()
+        for s, n, u in candidates:
+            if n not in used_sources and len(picked) < max_units and s >= candidates[0][0] * 0.4:
+                picked.append((n, u))
+                used_sources.add(n)
+        for s, n, u in candidates:
             if len(picked) >= max_units:
                 break
+            if (n, u) not in picked and s >= candidates[0][0] * 0.6:
+                picked.append((n, u))
         if not picked:
             return NOT_FOUND
-        return "Based on the retrieved sources:\n" + "\n".join(f"- {p}" for p in picked)
+        lines = [f"{u.rstrip('.')}. [{n}]" for n, u in picked]
+        return "Based on the retrieved sources:\n" + "\n".join(f"- {ln}" for ln in lines)

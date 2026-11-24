@@ -216,7 +216,7 @@ function initEvaluate() {
     $("#retrieval-table").innerHTML = `<thead><tr><th scope="col">Config</th>${cols.map((c) => `<th scope="col" class="num">${c}</th>`).join("")}</tr></thead>
       <tbody>${rows.map(([name, m]) => `<tr><th scope="row">${esc(name)}</th>${cols.map((c) => {
         const v = m[c];
-        const bar = c !== "latency_ms" && v != null ? `<span class="bar" style="width:${Math.round(v * 100)}%"></span>` : "";
+        const bar = c !== "latency_ms" && v != null ? `<span class="bar" style="width:${Math.round(v * 120)}px"></span>` : "";
         return `<td class="num ${v === best[c] ? "best" : ""}">${c === "latency_ms" ? fmt(v, 1) : fmt(v)}${bar}</td>`;
       }).join("")}</tr>`).join("")}</tbody>`;
     $("#eval-meta").textContent = `${summary.n_questions} questions · k=${k}`;

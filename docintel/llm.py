@@ -28,11 +28,20 @@ class LLMClient:
     def chat(self, messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 900,
              model: str | None = None) -> str:
         if not self._client:
-            raise RuntimeError("LLM is not configured (set LLM_API_KEY / AI_GATEWAY_API_KEY).")
+            raise RuntimeError("LLM is not configured (set GROQ_API_KEY).")
+        model = model or self.model
+        extra: dict = {}
+        if "gpt-oss" in model:
+            # Keep reasoning short so it doesn't consume the completion budget.
+            extra["reasoning_effort"] = "low"
+        elif "qwen3" in model:
+            extra["reasoning_format"] = "hidden"
         resp = self._client.chat.completions.create(
-            model=model or self.model, messages=messages, temperature=temperature, max_tokens=max_tokens
+            model=model, messages=messages, temperature=temperature, max_tokens=max_tokens,
+            extra_body=extra or None,
         )
-        return (resp.choices[0].message.content or "").strip()
+        text = resp.choices[0].message.content or ""
+        return re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
 
     def chat_json(self, messages: list[dict], **kwargs) -> dict | list:
         return parse_json(self.chat(messages, **kwargs))

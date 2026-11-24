@@ -35,11 +35,11 @@ class Config:
     MIN_IMAGE_SIDE = int(os.getenv("MIN_IMAGE_SIDE", "80"))
     OCR_DPI = int(os.getenv("OCR_DPI", "200"))
 
-    # LLM / VLM: any OpenAI-compatible endpoint (Vercel AI Gateway, OpenAI, Ollama, vLLM, ...)
-    LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://ai-gateway.vercel.sh/v1")
-    LLM_API_KEY = os.getenv("LLM_API_KEY") or os.getenv("AI_GATEWAY_API_KEY") or os.getenv("OPENAI_API_KEY")
-    LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-4o-mini")
-    VLM_MODEL = os.getenv("VLM_MODEL", "openai/gpt-4o-mini")
+    # LLM / VLM: Groq by default (OpenAI-compatible API); any other compatible endpoint also works.
+    LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
+    LLM_API_KEY = os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY")
+    LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
+    VLM_MODEL = os.getenv("VLM_MODEL", "qwen/qwen3.8-27b")
     ENABLE_VLM = _bool("ENABLE_VLM", True)
 
     # Embeddings: auto | sentence-transformers | openai | hashing

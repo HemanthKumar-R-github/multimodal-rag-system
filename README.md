@@ -34,7 +34,7 @@ pip install -r requirements.txt            # lightweight core (CPU, no torch)
 pip install -r requirements-ml.txt
 # optional OCR for scans: apt install tesseract-ocr  |  brew install tesseract  |  dnf install tesseract
 
-cp .env.example .env                       # add LLM_API_KEY to enable LLM answers + VLM
+cp .env.example .env                       # add GROQ_API_KEY to enable LLM answers + VLM
 python scripts/make_sample_docs.py --ingest   # demo corpus: text, table, chart, scanned page
 python app.py                              # http://localhost:5000
 ```
@@ -56,7 +56,7 @@ Every stage has a production backend and a fallback that needs no extra dependen
 | Sparse | BM25 (Lucene IDF), inverted index | — |
 | Fusion | Reciprocal Rank Fusion | — |
 | Reranker | cross-encoder `ms-marco-MiniLM-L-6-v2`, or `RERANKER_BACKEND=llm` | lexical-feature reranker |
-| Generation | Any OpenAI-compatible LLM (Vercel AI Gateway, OpenAI, Ollama, vLLM) | extractive, cited sentences/table rows |
+| Generation | Groq (`openai/gpt-oss-120b`, VLM `qwen/qwen3.8-27b`); any OpenAI-compatible endpoint via `LLM_BASE_URL` | extractive, cited sentences/table rows |
 
 If you change the embedding model, the FAISS index is rebuilt automatically on startup.
 
